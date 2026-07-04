@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify
-from main import TransactionLog, PrecalculatedStats, TransactionNode
+from app import TransactionLog, PrecalculatedStats, TransactionNode
 
 
 app = Flask(__name__)
 transaction_log = TransactionLog()
+
+# Load existing transactions from JSON on startup
+transaction_log.load_from_storage()
 
 # POST /transaction
 @app.route("/transaction", methods=["POST"])

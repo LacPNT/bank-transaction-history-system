@@ -1,21 +1,6 @@
 from datetime import datetime
+from database import TransactionNode, MonthStats, save_to_json, load_from_json
 
-
-class TransactionNode:
-    def __init__(self, transaction_id, transaction_type, amount, timestamp, balance_after):
-        self.transaction_id = transaction_id
-        self.transaction_type = transaction_type
-        self.amount = amount
-        self.timestamp = timestamp
-        self.balance_after = balance_after
-        self.next = None
-
-class MonthStats:
-    def __init__(self, total_income=0, total_expense=0, txn_count=0, ending_balance=0):
-        self.total_income = total_income
-        self.total_expense = total_expense
-        self.txn_count = txn_count
-        self.ending_balance = ending_balance
 
 class MergeSort:
     """Merge sort algorithm for sorting a TransactionNode linked list by transaction_id."""
@@ -90,28 +75,49 @@ class TransactionLog:
         return None
 
     def insert_transaction(self, transaction_id, transaction_type, amount, timestamp, balance_after):
-        new_node = TransactionNode(transaction_id, transaction_type, amount, timestamp, balance_after)
+        # Parse timestamp string to datetime object
+        if isinstance(timestamp, str):
+            dt = datetime.fromisoformat(timestamp)
+        else:
+            dt = timestamp
+
+        # Create new node and add to linked list (append at end)
+        new_node = TransactionNode(transaction_id, transaction_type, amount, dt, balance_after)
         if not self.head:
             self.head = new_node
         else:
             current = self.head
             while current.next:
                 current = current.next
-            current.next = new_node # This is not even a bug!
+            current.next = new_node
 
-        try:
-            dt = datetime.fromisoformat(timestamp)
-            month = dt.month
-        except (ValueError, TypeError):
-            month = 0  # Use index 0 if timestamp can't be parsed
-
+        # Update stats
+        month = dt.month
         self.stats.update_stats(transaction_type, amount, month, balance_after)
 
-    def display_transactions(self):
-        '''Display all transactions in the log.'''
+        # Persist to JSON file
+        save_to_json(self.head)
+
+    def load_from_storage(self):
+        """Load transactions from JSON file into the linked list."""
+        self.head = load_from_json()
+        # Rebuild stats from loaded data
+        self.stats = PrecalculatedStats()
         current = self.head
         while current:
-            print(f"Transaction ID: {current.transaction_id}, Type: {current.transaction_type}, Amount: {current.amount}, Timestamp: {current.timestamp}, Balance After: {current.balance_after}")
+            month = current.timestamp.month if current.timestamp else 0
+            self.stats.update_stats(
+                current.transaction_type, current.amount, month, current.balance_after
+            )
+            current = current.next
+
+    def display_transactions(self):
+        """Display all transactions in the log."""
+        current = self.head
+        while current:
+            print(f"Transaction ID: {current.transaction_id}, Type: {current.transaction_type}, "
+                  f"Amount: {current.amount}, Timestamp: {current.timestamp}, "
+                  f"Balance After: {current.balance_after}")
             current = current.next
 
 class PrecalculatedStats:

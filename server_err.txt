@@ -29,3 +29,42 @@ Press CTRL+C to quit
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 136-240-650
+ * Detected change in 'F:\\codeBase\\CSD203\\bank-transaction-history\\database.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 136-240-650
+ * Detected change in 'F:\\codeBase\\CSD203\\bank-transaction-history\\database.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 136-240-650
+ * Detected change in 'F:\\codeBase\\CSD203\\bank-transaction-history\\database.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 136-240-650
+ * Detected change in 'F:\\codeBase\\CSD203\\bank-transaction-history\\database.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 136-240-650
+ * Detected change in 'F:\\codeBase\\CSD203\\bank-transaction-history\\database.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 136-240-650
+ * Detected change in 'F:\\codeBase\\CSD203\\bank-transaction-history\\database.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 136-240-650
+ * Detected change in 'F:\\codeBase\\CSD203\\bank-transaction-history\\database.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 136-240-650
+ * Detected change in 'F:\\codeBase\\CSD203\\bank-transaction-history\\server.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 136-240-650
+ * Detected change in 'F:\\codeBase\\CSD203\\bank-transaction-history\\server.py', reloading
+ * Restarting with stat
+Traceback (most recent call last):
+  File [35m"F:\codeBase\CSD203\bank-transaction-history\server.py"[0m, line [35m7[0m, in [35m<module>[0m
+    [1;31mdb[0m.init_app(app)
+    [1;31m^^[0m
+[1;35mNameError[0m: [35mname 'db' is not defined[0m
