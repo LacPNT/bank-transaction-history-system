@@ -155,7 +155,7 @@ python test_api.py
 | File           | Description                                     |
 |----------------|-------------------------------------------------|
 | `server.py`    | Flask API with POST/GET endpoints               |
-| `main.py`      | Core logic: linked list, sorting, statistics    |
+| `app.py`       | Core logic: linked list, sorting, statistics    |
 | `test_api.py`  | Test script for the API endpoints               |
 | `requirements.txt` | Python dependencies                          |
 | `README.md`    | This file                                       |
