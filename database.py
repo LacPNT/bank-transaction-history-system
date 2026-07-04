@@ -16,7 +16,7 @@ class TransactionNode:
         self.amount = amount
         self.timestamp = timestamp
         self.balance_after = balance_after
-        self.next = None  # Linked-list pointer
+        self.next = None
 
     def __repr__(self):
         return (f"<TransactionNode(id={self.transaction_id}, type={self.transaction_type}, "
@@ -78,7 +78,7 @@ def load_from_json():
             timestamp=ts,
             balance_after=record["balance_after"]
         )
-        if head is None:
+        if head is None: # Using prev to keep the insertion order correct
             head = node
             prev = node
         else:
