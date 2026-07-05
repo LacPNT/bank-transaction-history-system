@@ -9,6 +9,7 @@ A Flask-based API (with a lightweight web UI) for recording and reporting bank t
 - Automatic monthly and yearly aggregation of statistics
 - Merge-sort algorithm for sorting transactions by ID
 - Retrieve reports for a specific month or the entire year
+- Reject duplicate transaction IDs and invalid transaction payloads at the API boundary
 
 ## Requirements
 
@@ -42,13 +43,13 @@ Add a new transaction to the log.
 
 **Request Body (JSON):**
 
-| Field            | Type   | Description                          |
-|------------------|--------|--------------------------------------|
-| `transaction_id` | string | Unique transaction identifier        |
+| Field | Type | Description |
+|---|---|---|
+| `transaction_id` | string | Unique transaction identifier |
 | `transaction_type` | string | Either `"deposit"` or `"withdrawal"` |
-| `amount`         | number | Transaction amount                   |
-| `timestamp`      | string | ISO 8601 timestamp (e.g., `"2025-01-15T10:30:00"`) |
-| `balance_after`  | number | Account balance after the transaction |
+| `amount` | number | Transaction amount |
+| `timestamp` | string | ISO 8601 timestamp (e.g., `"2025-01-15T10:30:00"`) |
+| `balance_after` | number | Account balance after the transaction |
 
 **Example request:**
 
@@ -72,13 +73,22 @@ curl -X POST http://127.0.0.1:5000/transaction \
 }
 ```
 
-**Response (400 Bad Request)** — if required fields are missing:
+**Response (400 Bad Request)** - if required fields are missing:
 
 ```json
 {
-  "error": "Missing required fields"
+  "error": "Missing required fields: transaction_type, amount, timestamp, balance_after"
 }
 ```
+
+Other validation rules enforced by `POST /transaction`:
+
+- `transaction_id` must be a non-empty string after trimming whitespace
+- `transaction_type` must be exactly `"deposit"` or `"withdrawal"`
+- `amount` must be numeric, must not be a boolean, and must be greater than `0`
+- `balance_after` must be numeric and must not be a boolean; negative balances are allowed
+- `timestamp` must be a valid ISO 8601 datetime string
+- Duplicate `transaction_id` values are rejected with **409 Conflict**
 
 ### 2. Get a Monthly or Yearly Report
 
@@ -89,8 +99,8 @@ Retrieve aggregated statistics for a specific month or the full year.
 **Path Parameters:**
 
 | Parameter | Description |
-|-----------|-------------|
-| `month`   | An integer `1`–`12` for a specific month, or `"all"` for the yearly report |
+|---|---|
+| `month` | An integer `1`-`12` for a specific month, or `"all"` for the yearly report |
 
 **Examples:**
 
@@ -152,16 +162,18 @@ A test suite is included. Start the server first, then run:
 python test_api.py
 ```
 
+The script prompts before running and then performs assertion-based checks against the live server.
+
 ## Project Structure
 
-| File           | Description                                     |
-|----------------|-------------------------------------------------|
-| `server.py`    | Flask API with POST/GET endpoints + `/` UI route |
-| `database.py`  | System's data structure                         |
-| `app.py`       | Core logic: linked list (tail pointer), sorting, statistics |
+| File | Description |
+|---|---|
+| `server.py` | Flask API with POST/GET endpoints + `/` UI route |
+| `database.py` | System's data structure |
+| `app.py` | Core logic: linked list (tail pointer), sorting, statistics |
 | `templates/index.html` | Web UI: add-transaction form + report viewer |
-| `static/style.css` | Web UI styling                              |
-| `static/app.js`    | Web UI logic (fetch calls to the API)       |
-| `test_api.py`  | Test script for the API endpoints               |
-| `requirements.txt` | Python dependencies                          |
-| `README.md`    | This file                                       |
+| `static/style.css` | Web UI styling |
+| `static/app.js` | Web UI logic (fetch calls to the API) |
+| `test_api.py` | Assertion-based test script for the API endpoints |
+| `requirements.txt` | Python dependencies |
+| `README.md` | This file |

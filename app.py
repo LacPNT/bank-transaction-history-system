@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from database import TransactionNode, MonthStats, save_to_json, load_from_json
 
 
@@ -70,14 +71,11 @@ class TransactionLog:
         self.tail = current
 
     def search_by_id(self, transaction_id):
-        """Linear search — works on any list (sorted or unsorted)."""
+        """Linear search over the insertion-order linked list. O(n) worst case."""
         current = self.head
         while current:
             if current.transaction_id == transaction_id:
                 return current
-            # Early exit if we've passed where the ID would be (only valid for sorted lists)
-            if current.transaction_id > transaction_id:
-                break
             current = current.next
         return None
 
@@ -88,7 +86,7 @@ class TransactionLog:
         else:
             dt = timestamp
 
-        # Create new node and append at the tail — O(1) via the tail pointer,
+        # Create new node and append at the tail - O(1) via the tail pointer,
         # instead of traversing the whole list on every insert.
         new_node = TransactionNode(transaction_id, transaction_type, amount, dt, balance_after)
         if not self.head:
@@ -124,10 +122,13 @@ class TransactionLog:
         """Display all transactions in the log."""
         current = self.head
         while current:
-            print(f"Transaction ID: {current.transaction_id}, Type: {current.transaction_type}, "
-                  f"Amount: {current.amount}, Timestamp: {current.timestamp}, "
-                  f"Balance After: {current.balance_after}")
+            print(
+                f"Transaction ID: {current.transaction_id}, Type: {current.transaction_type}, "
+                f"Amount: {current.amount}, Timestamp: {current.timestamp}, "
+                f"Balance After: {current.balance_after}"
+            )
             current = current.next
+
 
 class PrecalculatedStats:
     def __init__(self):
@@ -158,26 +159,26 @@ class PrecalculatedStats:
         if month is not None:
             target = self.months[month]
             return {
-                'month': month,
-                'total_income': target.total_income,
-                'total_expense': target.total_expense,
-                'txn_count': target.txn_count,
-                'ending_balance': target.ending_balance
+                "month": month,
+                "total_income": target.total_income,
+                "total_expense": target.total_expense,
+                "txn_count": target.txn_count,
+                "ending_balance": target.ending_balance,
             }
         report = {}
         for i in range(1, 13):
             m = self.months[i]
             report[f"month_{i}"] = {
-                'total_income': m.total_income,
-                'total_expense': m.total_expense,
-                'txn_count': m.txn_count,
-                'ending_balance': m.ending_balance
+                "total_income": m.total_income,
+                "total_expense": m.total_expense,
+                "txn_count": m.txn_count,
+                "ending_balance": m.ending_balance,
             }
-        report['yearly_total'] = {
-            'total_income': self.months[0].total_income,
-            'total_expense': self.months[0].total_expense,
-            'txn_count': self.months[0].txn_count,
-            'ending_balance': self.months[0].ending_balance
+        report["yearly_total"] = {
+            "total_income": self.months[0].total_income,
+            "total_expense": self.months[0].total_expense,
+            "txn_count": self.months[0].txn_count,
+            "ending_balance": self.months[0].ending_balance,
         }
         return report
 
@@ -186,8 +187,12 @@ class PrecalculatedStats:
         print("\n--- Monthly Statistics ---")
         for i in range(1, 13):
             m = self.months[i]
-            print(f"Month {i:2d}: Income={m.total_income:>8.2f}, Expense={m.total_expense:>8.2f}, "
-                  f"Txns={m.txn_count:>4d}, Balance={m.ending_balance:>8.2f}")
+            print(
+                f"Month {i:2d}: Income={m.total_income:>8.2f}, Expense={m.total_expense:>8.2f}, "
+                f"Txns={m.txn_count:>4d}, Balance={m.ending_balance:>8.2f}"
+            )
         y = self.months[0]
-        print(f"Year : Income={y.total_income:>8.2f}, Expense={y.total_expense:>8.2f}, "
-              f"Txns={y.txn_count:>4d}, Balance={y.ending_balance:>8.2f}")
+        print(
+            f"Year : Income={y.total_income:>8.2f}, Expense={y.total_expense:>8.2f}, "
+            f"Txns={y.txn_count:>4d}, Balance={y.ending_balance:>8.2f}"
+        )
