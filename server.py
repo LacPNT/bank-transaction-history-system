@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from app import TransactionLog, PrecalculatedStats, TransactionNode
 
 
@@ -7,6 +7,11 @@ transaction_log = TransactionLog()
 
 # Load existing transactions from JSON on startup
 transaction_log.load_from_storage()
+
+# GET / — serves the frontend (form to add a transaction + report viewer)
+@app.route("/", methods=["GET"])
+def index():
+    return render_template("index.html")
 
 # POST /transaction
 @app.route("/transaction", methods=["POST"])

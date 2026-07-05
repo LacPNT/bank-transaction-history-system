@@ -56,11 +56,18 @@ class MergeSort:
 class TransactionLog:
     def __init__(self):
         self.head = None
+        self.tail = None
         self.stats = PrecalculatedStats()
 
     def sort_by_id(self):
         """Sort transactions by transaction_id using merge sort (ascending)."""
         self.head = MergeSort.sort(self.head)
+        # Merge sort changes which node is last, so the tail pointer must be
+        # recomputed to keep future appends O(1).
+        current = self.head
+        while current and current.next:
+            current = current.next
+        self.tail = current
 
     def search_by_id(self, transaction_id):
         """Linear search — works on any list (sorted or unsorted)."""
@@ -81,15 +88,15 @@ class TransactionLog:
         else:
             dt = timestamp
 
-        # Create new node and add to linked list (append at end)
+        # Create new node and append at the tail — O(1) via the tail pointer,
+        # instead of traversing the whole list on every insert.
         new_node = TransactionNode(transaction_id, transaction_type, amount, dt, balance_after)
         if not self.head:
             self.head = new_node
+            self.tail = new_node
         else:
-            current = self.head
-            while current.next:
-                current = current.next
-            current.next = new_node
+            self.tail.next = new_node
+            self.tail = new_node
 
         # Update stats
         month = dt.month
@@ -101,14 +108,16 @@ class TransactionLog:
     def load_from_storage(self):
         """Load transactions from JSON file into the linked list."""
         self.head = load_from_json()
-        # Rebuild stats from loaded data
+        # Rebuild stats from loaded data and recompute the tail pointer
         self.stats = PrecalculatedStats()
+        self.tail = None
         current = self.head
         while current:
             month = current.timestamp.month if current.timestamp else 0
             self.stats.update_stats(
                 current.transaction_type, current.amount, month, current.balance_after
             )
+            self.tail = current
             current = current.next
 
     def display_transactions(self):

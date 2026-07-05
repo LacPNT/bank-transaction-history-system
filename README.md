@@ -1,10 +1,11 @@
 # Bank Transaction History System
 
-A Flask-based API for recording and reporting bank transactions. This system uses a **linked list** data structure to store transactions and provides **pre-calculated monthly statistics** for fast reporting.
+A Flask-based API (with a lightweight web UI) for recording and reporting bank transactions. This system uses a **singly linked list with a tail pointer** to store transactions and provides **pre-calculated monthly statistics** for fast reporting.
 
 ## Features
 
-- Add transactions (deposits/withdrawals) via REST API
+- Add transactions (deposits/withdrawals) via REST API or the web UI
+- O(1) append via a tail pointer on the transaction linked list
 - Automatic monthly and yearly aggregation of statistics
 - Merge-sort algorithm for sorting transactions by ID
 - Retrieve reports for a specific month or the entire year
@@ -13,6 +14,7 @@ A Flask-based API for recording and reporting bank transactions. This system use
 
 - Python 3.x
 - Flask
+- Requests (used by `test_api.py`)
 
 Install dependencies:
 
@@ -28,7 +30,7 @@ Start the Flask API server:
 python server.py
 ```
 
-The server runs on `http://127.0.0.1:5000` by default.
+The server runs on `http://127.0.0.1:5000` by default. Open that URL in a browser for the web UI (add a transaction and view monthly/yearly reports), or call the JSON API directly as described below.
 
 ## API Endpoints
 
@@ -154,9 +156,12 @@ python test_api.py
 
 | File           | Description                                     |
 |----------------|-------------------------------------------------|
-| `server.py`    | Flask API with POST/GET endpoints               |
+| `server.py`    | Flask API with POST/GET endpoints + `/` UI route |
 | `database.py`  | System's data structure                         |
-| `app.py`       | Core logic: sorting, statistics                 |
+| `app.py`       | Core logic: linked list (tail pointer), sorting, statistics |
+| `templates/index.html` | Web UI: add-transaction form + report viewer |
+| `static/style.css` | Web UI styling                              |
+| `static/app.js`    | Web UI logic (fetch calls to the API)       |
 | `test_api.py`  | Test script for the API endpoints               |
 | `requirements.txt` | Python dependencies                          |
 | `README.md`    | This file                                       |
