@@ -36,6 +36,7 @@ txnForm.addEventListener('submit', async (event) => {
       txnResult.textContent = data.message || 'Transaction added successfully';
       txnResult.className = 'result ok';
       txnForm.reset();
+      await loadReport();
     } else {
       txnResult.textContent = data.error || 'Failed to add transaction';
       txnResult.className = 'result error';
