@@ -7,22 +7,36 @@ const reportOutput = document.getElementById('report-output');
 function toIsoTimestamp(datetimeLocalValue) {
   // <input type="datetime-local"> yields "YYYY-MM-DDTHH:MM" (no seconds).
   // Pad to "YYYY-MM-DDTHH:MM:SS" so the backend's datetime.fromisoformat() parses it consistently.
+  // Also validate that the year is exactly 4 digits.
+  const yearMatch = datetimeLocalValue.match(/^(\d+)-/);
+  if (yearMatch && yearMatch[1].length !== 4) {
+    throw new Error(`Invalid year: "${yearMatch[1]}" — year must be exactly 4 digits`);
+  }
   return datetimeLocalValue.length === 16 ? `${datetimeLocalValue}:00` : datetimeLocalValue;
 }
 
 txnForm.addEventListener('submit', async (event) => {
   event.preventDefault();
 
+  let timestamp;
+  try {
+    timestamp = toIsoTimestamp(document.getElementById('timestamp').value);
+  } catch (err) {
+    txnResult.textContent = err.message;
+    txnResult.className = 'result error';
+    return;
+  }
+
   const payload = {
     transaction_id: document.getElementById('transaction_id').value.trim(),
     transaction_type: document.getElementById('transaction_type').value,
     amount: parseFloat(document.getElementById('amount').value),
-    timestamp: toIsoTimestamp(document.getElementById('timestamp').value),
+    timestamp,
     balance_after: parseFloat(document.getElementById('balance_after').value),
   };
 
   txnResult.textContent = 'Submitting...';
-  txnResult.className = 'result';
+    txnResult.className = 'result';
 
   try {
     const response = await fetch('/transaction', {
