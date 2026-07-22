@@ -33,7 +33,6 @@ def add_transaction():
         "transaction_type",
         "amount",
         "timestamp",
-        "balance_after",
     ]
     missing_fields = [field for field in required_fields if field not in data]
     if missing_fields:
@@ -43,7 +42,7 @@ def add_transaction():
     transaction_type = data.get("transaction_type")
     amount = data.get("amount")
     timestamp = data.get("timestamp")
-    balance_after = data.get("balance_after")
+    balance_after = data.get("balance_after")  # Optional; auto-computed if omitted
 
     if not isinstance(transaction_id, str) or not transaction_id.strip():
         return jsonify({"error": "transaction_id must be a non-empty string"}), 400
@@ -55,7 +54,7 @@ def add_transaction():
     if not _is_number(amount) or amount <= 0:
         return jsonify({"error": "amount must be a numeric value greater than 0"}), 400
 
-    if not _is_number(balance_after):
+    if balance_after is not None and not _is_number(balance_after):
         return jsonify({"error": "balance_after must be a numeric value"}), 400
 
     if not isinstance(timestamp, str):
@@ -71,7 +70,7 @@ def add_transaction():
     if transaction_log.search_by_id(transaction_id):
         return jsonify({"error": "transaction_id already exists"}), 409
 
-    # Insert the transaction into the log
+    # Insert the transaction into the log (balance_after will be auto-computed if None)
     transaction_log.insert_transaction(
         transaction_id, transaction_type, amount, timestamp, balance_after
     )

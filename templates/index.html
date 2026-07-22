@@ -35,10 +35,7 @@
           <label for="timestamp">Timestamp</label>
           <input type="datetime-local" id="timestamp" name="timestamp" min="1000-01-01T00:00" max="9999-12-31T23:59" required>
         </div>
-        <div class="field">
-          <label for="balance_after">Balance After</label>
-          <input type="number" id="balance_after" name="balance_after" step="0.01" placeholder="15000.00" required>
-        </div>
+        <!-- balance_after is auto-calculated server-side -->
         <button type="submit">Add Transaction</button>
       </form>
       <p id="txn-result" class="result" role="status"></p>

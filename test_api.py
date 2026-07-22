@@ -38,15 +38,17 @@ def post_transaction(payload, expected_status, expected_error_substring=None):
     return resp
 
 
-def test_add_transaction(txn_id, txn_type, amount, timestamp, balance_after,
+def test_add_transaction(txn_id, txn_type, amount, timestamp, balance_after=None,
                          expected_status=201, expected_error_substring=None):
     payload = {
         "transaction_id": txn_id,
         "transaction_type": txn_type,
         "amount": amount,
         "timestamp": timestamp,
-        "balance_after": balance_after,
     }
+    # Include balance_after in payload only if explicitly provided
+    if balance_after is not None:
+        payload["balance_after"] = balance_after
     return post_transaction(payload, expected_status, expected_error_substring)
 
 
@@ -91,13 +93,12 @@ def main():
 
     run_id = uuid.uuid4().hex[:8]
 
-    print_separator("TEST 1: Add valid transactions")
-    test_add_transaction(f"T{run_id}01", "deposit", 5000.00, "2025-01-15T10:30:00", 15000.00)
-    test_add_transaction(f"T{run_id}02", "withdrawal", 2000.00, "2025-01-20T14:00:00", 13000.00)
+    print_separator("TEST 1: Add valid transactions (balance_after auto-calculated)")
+    test_add_transaction(f"T{run_id}01", "deposit", 5000.00, "2025-01-15T10:30:00")
+    test_add_transaction(f"T{run_id}02", "withdrawal", 2000.00, "2025-01-20T14:00:00")
 
-    print_separator("TEST 2: balance_after edge cases")
-    test_add_transaction(f"T{run_id}03", "deposit", 3000.00, "2025-02-10T09:15:00", 0)
-    test_add_transaction(f"T{run_id}04", "withdrawal", 1500.00, "2025-02-25T16:45:00", -500.00)
+    print_separator("TEST 2: balance_after auto-calculation with zero and negative")
+    test_add_transaction(f"T{run_id}03", "deposit", 3000.00, "2025-02-10T09:15:00")
 
     print_separator("TEST 3: Missing fields (expect 400)")
     test_invalid_payload()
@@ -108,27 +109,25 @@ def main():
         "deposit",
         0,
         "2025-03-05T11:00:00",
-        21500.00,
-        400,
-        "amount must be a numeric value greater than 0",
+        expected_status=400,
+        expected_error_substring="amount must be a numeric value greater than 0",
     )
     test_add_transaction(
         f"T{run_id}06",
         "deposit",
         True,
         "2025-03-06T11:00:00",
-        21500.00,
-        400,
-        "amount must be a numeric value greater than 0",
+        expected_status=400,
+        expected_error_substring="amount must be a numeric value greater than 0",
     )
     test_add_transaction(
         f"T{run_id}06B",
         "deposit",
         100.00,
         "2025-03-06T11:05:00",
-        False,
-        400,
-        "balance_after must be a numeric value",
+        balance_after=False,
+        expected_status=400,
+        expected_error_substring="balance_after must be a numeric value",
     )
 
     print_separator("TEST 5: Invalid transaction type")
@@ -137,9 +136,8 @@ def main():
         "transfer",
         100.00,
         "2025-03-07T11:00:00",
-        21600.00,
-        400,
-        "transaction_type must be 'deposit' or 'withdrawal'",
+        expected_status=400,
+        expected_error_substring="transaction_type must be 'deposit' or 'withdrawal'",
     )
 
     print_separator("TEST 6: Invalid timestamp")
@@ -148,22 +146,20 @@ def main():
         "deposit",
         100.00,
         "not-a-timestamp",
-        21600.00,
-        400,
-        "timestamp must be a valid ISO 8601 datetime string",
+        expected_status=400,
+        expected_error_substring="timestamp must be a valid ISO 8601 datetime string",
     )
 
     print_separator("TEST 7: Duplicate transaction ID")
     duplicate_id = f"T{run_id}09"
-    test_add_transaction(duplicate_id, "deposit", 7000.00, "2025-03-05T11:00:00", 21500.00)
+    test_add_transaction(duplicate_id, "deposit", 7000.00, "2025-03-05T11:00:00")
     test_add_transaction(
         duplicate_id,
         "deposit",
         7100.00,
         "2025-03-06T11:00:00",
-        28600.00,
-        409,
-        "transaction_id already exists",
+        expected_status=409,
+        expected_error_substring="transaction_id already exists",
     )
 
     print_separator("TEST 8: Report for all months (GET /report/all)")

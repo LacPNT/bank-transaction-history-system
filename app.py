@@ -79,12 +79,22 @@ class TransactionLog:
             current = current.next
         return None
 
-    def insert_transaction(self, transaction_id, transaction_type, amount, timestamp, balance_after):
+    def insert_transaction(self, transaction_id, transaction_type, amount, timestamp, balance_after=None):
         # Parse timestamp string to datetime object
         if isinstance(timestamp, str):
             dt = datetime.fromisoformat(timestamp)
         else:
             dt = timestamp
+
+        # Auto-compute balance_after if not provided
+        if balance_after is None:
+            last_balance = self.get_latest_balance()
+            if transaction_type == "deposit":
+                balance_after = last_balance + amount
+            elif transaction_type == "withdrawal":
+                balance_after = last_balance - amount
+            else:
+                balance_after = last_balance
 
         # Create new node and append at the tail - O(1) via the tail pointer,
         # instead of traversing the whole list on every insert.
@@ -102,6 +112,12 @@ class TransactionLog:
 
         # Persist to JSON file
         save_to_json(self.head)
+
+    def get_latest_balance(self):
+        """Return the balance_after of the most recent transaction, or 0 if empty."""
+        if self.tail:
+            return self.tail.balance_after
+        return 0.0
 
     def load_from_storage(self):
         """Load transactions from JSON file into the linked list."""

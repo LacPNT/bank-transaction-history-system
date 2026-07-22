@@ -32,7 +32,7 @@ txnForm.addEventListener('submit', async (event) => {
     transaction_type: document.getElementById('transaction_type').value,
     amount: parseFloat(document.getElementById('amount').value),
     timestamp,
-    balance_after: parseFloat(document.getElementById('balance_after').value),
+    // balance_after is omitted — it is auto-calculated server-side
   };
 
   txnResult.textContent = 'Submitting...';

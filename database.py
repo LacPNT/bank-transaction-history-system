@@ -61,7 +61,7 @@ def load_from_json():
         return None
 
     head = None
-    prev = None
+    prev = None # Pointer
     for record in data:
         # Parse timestamp string back to datetime
         ts = record.get("timestamp")
