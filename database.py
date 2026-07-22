@@ -49,6 +49,12 @@ def save_to_json(head):
         json.dump(data, f, indent=2)
 
 
+def clear_storage():
+    """Overwrite the JSON file with an empty array (reset database)."""
+    with open(DATA_FILE, "w") as f:
+        json.dump([], f)
+
+
 def load_from_json():
     """Load the linked list from a JSON file. Returns the head node."""
     if not os.path.exists(DATA_FILE):

@@ -1,6 +1,7 @@
 """
 Interactive test script for the Flask bank transaction API.
 Runs assertion-based checks against the live server.
+Database is reset ONCE at the start via POST /reset.
 """
 import json
 import uuid
@@ -46,7 +47,6 @@ def test_add_transaction(txn_id, txn_type, amount, timestamp, balance_after=None
         "amount": amount,
         "timestamp": timestamp,
     }
-    # Include balance_after in payload only if explicitly provided
     if balance_after is not None:
         payload["balance_after"] = balance_after
     return post_transaction(payload, expected_status, expected_error_substring)
@@ -91,14 +91,38 @@ def main():
 
     input("\nPress Enter to continue if server is running, or Ctrl+C to quit: ")
 
+    # Reset database ONCE so every run starts clean
+    resp = requests.post(f"{BASE_URL}/reset", timeout=5)
+    assert resp.status_code == 200, f"Reset failed: {resp.json()}"
+    print("\n    [Database reset]\n")
+
     run_id = uuid.uuid4().hex[:8]
+
+    # Balance chain (each test adds to the previous):
+    # T01: Jan +5000 → 5000
+    # T02: Jan -2000 → 3000
+    # T03: Feb +3000 → 6000
+    # T09: Mar +7000 → 13000
 
     print_separator("TEST 1: Add valid transactions (balance_after auto-calculated)")
     test_add_transaction(f"T{run_id}01", "deposit", 5000.00, "2025-01-15T10:30:00")
     test_add_transaction(f"T{run_id}02", "withdrawal", 2000.00, "2025-01-20T14:00:00")
 
-    print_separator("TEST 2: balance_after auto-calculation with zero and negative")
+    # Jan: income=5000, expense=2000, balance=3000
+    resp = test_get_report(1, 200)
+    data = resp.json()
+    assert data["total_income"] == 5000.0
+    assert data["total_expense"] == 2000.0
+    assert data["ending_balance"] == 3000.0
+
+    print_separator("TEST 2: balance_after auto-calculation (cumulative chain)")
     test_add_transaction(f"T{run_id}03", "deposit", 3000.00, "2025-02-10T09:15:00")
+
+    # Jan: still 5000/2000/3000. Feb: income=3000, balance=6000
+    resp = test_get_report(2, 200)
+    data = resp.json()
+    assert data["total_income"] == 3000.0
+    assert data["ending_balance"] == 6000.0
 
     print_separator("TEST 3: Missing fields (expect 400)")
     test_invalid_payload()
@@ -163,7 +187,19 @@ def main():
     )
 
     print_separator("TEST 8: Report for all months (GET /report/all)")
-    test_get_report("all", 200)
+    resp = test_get_report("all", 200)
+    data = resp.json()
+    # Cumulative: Jan(5000i,2000e,3000bal) + Feb(3000i,6000bal) + Mar(7000i,13000bal)
+    assert data["month_1"]["total_income"] == 5000.0
+    assert data["month_1"]["total_expense"] == 2000.0
+    assert data["month_1"]["ending_balance"] == 3000.0
+    assert data["month_2"]["total_income"] == 3000.0
+    assert data["month_2"]["ending_balance"] == 6000.0
+    assert data["month_3"]["total_income"] == 7000.0
+    assert data["month_3"]["ending_balance"] == 13000.0
+    assert data["yearly_total"]["total_income"] == 15000.0
+    assert data["yearly_total"]["total_expense"] == 2000.0
+    assert data["yearly_total"]["ending_balance"] == 13000.0
 
     print_separator("TEST 9: Invalid month values")
     test_invalid_month()

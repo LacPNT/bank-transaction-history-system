@@ -2,7 +2,8 @@ from datetime import datetime
 
 from flask import Flask, jsonify, render_template, request
 
-from app import TransactionLog
+from app import TransactionLog, PrecalculatedStats
+from database import clear_storage
 
 
 app = Flask(__name__)
@@ -93,6 +94,16 @@ def get_report(month):
             return jsonify({"error": "Month must be between 1 and 12."}), 400
         transactions = stats.get_report(month_int)
     return jsonify(transactions), 200
+
+
+# POST /reset — clears all transactions and resets stats (for testing)
+@app.route("/reset", methods=["POST"])
+def reset_database():
+    transaction_log.head = None
+    transaction_log.tail = None
+    transaction_log.stats = PrecalculatedStats()
+    clear_storage()
+    return jsonify({"message": "Database reset successfully"}), 200
 
 
 if __name__ == "__main__":
