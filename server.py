@@ -55,8 +55,17 @@ def add_transaction():
     if not _is_number(amount) or amount <= 0:
         return jsonify({"error": "amount must be a numeric value greater than 0"}), 400
 
-    if balance_after is not None and not _is_number(balance_after):
-        return jsonify({"error": "balance_after must be a numeric value"}), 400
+    if balance_after is not None:
+        if not _is_number(balance_after):
+            return jsonify({"error": "balance_after must be a numeric value"}), 400
+        effective_balance = balance_after
+    else:
+        # Preview the auto-computed balance so the non-negative rule applies
+        # even when the client omits balance_after.
+        effective_balance = transaction_log.compute_projected_balance(transaction_type, amount)
+
+    if effective_balance < 0:
+        return jsonify({"error": "balance_after must not be negative"}), 400
 
     if not isinstance(timestamp, str):
         return jsonify({"error": "timestamp must be an ISO 8601 string"}), 400

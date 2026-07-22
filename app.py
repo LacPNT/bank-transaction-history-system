@@ -88,13 +88,7 @@ class TransactionLog:
 
         # Auto-compute balance_after if not provided
         if balance_after is None:
-            last_balance = self.get_latest_balance()
-            if transaction_type == "deposit":
-                balance_after = last_balance + amount
-            elif transaction_type == "withdrawal":
-                balance_after = last_balance - amount
-            else:
-                balance_after = last_balance
+            balance_after = self.compute_projected_balance(transaction_type, amount)
 
         # Create new node and append at the tail - O(1) via the tail pointer,
         # instead of traversing the whole list on every insert.
@@ -118,6 +112,15 @@ class TransactionLog:
         if self.tail:
             return self.tail.balance_after
         return 0.0
+
+    def compute_projected_balance(self, transaction_type, amount):
+        """Compute what balance_after would be for a new transaction, without inserting it."""
+        last_balance = self.get_latest_balance()
+        if transaction_type == "deposit":
+            return last_balance + amount
+        elif transaction_type == "withdrawal":
+            return last_balance - amount
+        return last_balance
 
     def load_from_storage(self):
         """Load transactions from JSON file into the linked list."""

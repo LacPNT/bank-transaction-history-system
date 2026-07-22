@@ -85,7 +85,7 @@ Other validation rules enforced by `POST /transaction`:
 - `transaction_id` must be a non-empty string after trimming whitespace
 - `transaction_type` must be exactly `"deposit"` or `"withdrawal"`
 - `amount` must be numeric, must not be a boolean, and must be greater than `0`
-- `balance_after` (if explicitly provided) must be numeric and must not be a boolean; negative balances are allowed
+- `balance_after` (explicit or auto-calculated) must be numeric, must not be a boolean, and must not be negative (rejected with `400`); a balance of exactly `0` is valid
 - `timestamp` must be a valid ISO 8601 datetime string
 - Duplicate `transaction_id` values are rejected with **409 Conflict**
 
