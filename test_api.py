@@ -201,7 +201,32 @@ def main():
     assert data["yearly_total"]["total_expense"] == 2000.0
     assert data["yearly_total"]["ending_balance"] == 13000.0
 
-    print_separator("TEST 9: Invalid month values")
+    print_separator("TEST 9: Reject negative balance_after")
+    # Auto-calculated balance would go negative: current running balance is 13000.
+    test_add_transaction(
+        f"T{run_id}10",
+        "withdrawal",
+        20000.00,
+        "2025-03-10T11:00:00",
+        expected_status=400,
+        expected_error_substring="balance_after must not be negative",
+    )
+    # Explicit negative balance_after is rejected the same way.
+    test_add_transaction(
+        f"T{run_id}11",
+        "deposit",
+        100.00,
+        "2025-03-11T11:00:00",
+        balance_after=-50.00,
+        expected_status=400,
+        expected_error_substring="balance_after must not be negative",
+    )
+    # Zero balance remains valid: withdraw exactly the current balance (13000).
+    test_add_transaction(f"T{run_id}12", "withdrawal", 13000.00, "2025-03-12T11:00:00")
+    resp = test_get_report(3, 200)
+    assert resp.json()["ending_balance"] == 0.0
+
+    print_separator("TEST 10: Invalid month values")
     test_invalid_month()
 
     print("\n" + "=" * 60)
