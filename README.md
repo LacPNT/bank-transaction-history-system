@@ -49,9 +49,9 @@ Add a new transaction to the log.
 | `transaction_type` | string | Either `"deposit"` or `"withdrawal"` |
 | `amount` | number | Transaction amount |
 | `timestamp` | string | ISO 8601 timestamp (e.g., `"2025-01-15T10:30:00"`) |
-| `balance_after` | number | Account balance after the transaction |
+| `balance_after` | number (optional) | Account balance after the transaction. If omitted, it is **auto-calculated** server-side: `previous_balance + amount` for deposits, `previous_balance - amount` for withdrawals. |
 
-**Example request:**
+**Example request (without balance_after — auto-calculated):**
 
 ```bash
 curl -X POST http://127.0.0.1:5000/transaction \
@@ -60,8 +60,7 @@ curl -X POST http://127.0.0.1:5000/transaction \
     "transaction_id": "T001",
     "transaction_type": "deposit",
     "amount": 5000.00,
-    "timestamp": "2025-01-15T10:30:00",
-    "balance_after": 15000.00
+    "timestamp": "2025-01-15T10:30:00"
   }'
 ```
 
@@ -77,7 +76,7 @@ curl -X POST http://127.0.0.1:5000/transaction \
 
 ```json
 {
-  "error": "Missing required fields: transaction_type, amount, timestamp, balance_after"
+  "error": "Missing required fields: transaction_id, transaction_type, amount, timestamp"
 }
 ```
 
@@ -86,7 +85,7 @@ Other validation rules enforced by `POST /transaction`:
 - `transaction_id` must be a non-empty string after trimming whitespace
 - `transaction_type` must be exactly `"deposit"` or `"withdrawal"`
 - `amount` must be numeric, must not be a boolean, and must be greater than `0`
-- `balance_after` must be numeric and must not be a boolean; negative balances are allowed
+- `balance_after` (if explicitly provided) must be numeric and must not be a boolean; negative balances are allowed
 - `timestamp` must be a valid ISO 8601 datetime string
 - Duplicate `transaction_id` values are rejected with **409 Conflict**
 
